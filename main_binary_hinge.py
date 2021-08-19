@@ -80,7 +80,7 @@ def main():
     #torch.save(args.batch_size/(len(args.gpus)/2+1),'multi_gpu_batch_size')
     if args.evaluate:
         args.results_dir = '/tmp'
-    if args.save is '':
+    if args.save == '':
         args.save = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     save_path = os.path.join(args.results_dir, args.save)
     if not os.path.exists(save_path):
@@ -107,7 +107,7 @@ def main():
 
     model_config = {'input_size': args.input_size, 'dataset': args.dataset, 'num_classes': output_dim}
 
-    if args.model_config is not '':
+    if args.model_config != '':
         model_config = dict(model_config, **literal_eval(args.model_config))
     model = model(**model_config)
     logging.info("created model with configuration: %s", model_config)
