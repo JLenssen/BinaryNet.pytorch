@@ -144,17 +144,13 @@ def accuracy(output, target, topk=(1,)):
     maxk = max(topk)
     batch_size = target.size(0)
 
+    # for every sample get top k
     _, pred = output.float().topk(maxk, 1, True, True)
     pred = pred.t()
     correct = pred.eq(target.view(1, -1).expand_as(pred))
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0)
+        correct_k = correct[:k].float().sum()
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
-
-    # kernel_img = model.features[0][0].kernel.data.clone()
-    # kernel_img.add_(-kernel_img.min())
-    # kernel_img.mul_(255 / kernel_img.max())
-    # save_image(kernel_img, 'kernel%s.jpg' % epoch)

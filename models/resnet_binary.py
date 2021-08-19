@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torchvision.transforms as transforms
 import math
 from .binarized_modules import  BinarizeLinear,BinarizeConv2d
 
@@ -39,7 +38,7 @@ class BasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
 
         self.downsample = downsample
-        self.do_bntan=do_bntan;
+        self.do_bntan=do_bntan
         self.stride = stride
 
     def forward(self, x):
@@ -84,7 +83,6 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         residual = x
-        import pdb; pdb.set_trace()
         out = self.conv1(x)
         out = self.bn1(out)
         out = self.tanh(out)

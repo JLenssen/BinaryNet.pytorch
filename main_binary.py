@@ -10,12 +10,11 @@ import torch.optim
 import torch.utils.data
 import models
 from torch.autograd import Variable
-from data import get_dataset
+from dataloader import get_dataset
 from preprocess import get_transform
 from utils import *
 from datetime import datetime
 from ast import literal_eval
-from torchvision.utils import save_image
 
 
 model_names = sorted(name for name in models.__dict__
@@ -28,7 +27,7 @@ parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results',
                     help='results dir')
 parser.add_argument('--save', metavar='SAVE', default='',
                     help='saved folder')
-parser.add_argument('--dataset', metavar='DATASET', default='imagenet',
+parser.add_argument('--dataset', metavar='DATASET', default='mnist',
                     help='dataset name or folder')
 parser.add_argument('--model', '-a', metavar='MODEL', default='alexnet',
                     choices=model_names,
@@ -39,8 +38,8 @@ parser.add_argument('--input_size', type=int, default=None,
                     help='image input size')
 parser.add_argument('--model_config', default='',
                     help='additional architecture configuration')
-parser.add_argument('--type', default='torch.cuda.FloatTensor',
-                    help='type of tensor - e.g torch.cuda.HalfTensor')
+parser.add_argument('--type', default='torch.FloatTensor',
+                    help='type of tensor - e.g torch.cuda.{Float,Half}Tensor')
 parser.add_argument('--gpus', default='0',
                     help='gpus used for training - e.g 0,1,3')
 parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
@@ -49,7 +48,7 @@ parser.add_argument('--epochs', default=2500, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=64, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
 parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
                     help='optimizer function used')
@@ -148,7 +147,8 @@ def main():
     # define loss function (criterion) and optimizer
     criterion = getattr(model, 'criterion', nn.CrossEntropyLoss)()
     criterion.type(args.type)
-    model.type(args.type)
+    if args.type != '':
+        model.type(args.type)
 
     val_data = get_dataset(args.dataset, 'val', transform['eval'])
     val_loader = torch.utils.data.DataLoader(
@@ -168,7 +168,6 @@ def main():
 
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr)
     logging.info('training regime: %s', regime)
-
 
     for epoch in range(args.start_epoch, args.epochs):
         optimizer = adjust_optimizer(optimizer, epoch, regime)
@@ -234,12 +233,12 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
 
         if not training:
             with torch.no_grad():
-                input_var = Variable(inputs.type(args.type), volatile=not training)
+                input_var = Variable(inputs.type(args.type))
                 target_var = Variable(target)
                 # compute output
                 output = model(input_var)
         else:
-            input_var = Variable(inputs.type(args.type), volatile=not training)
+            input_var = Variable(inputs.type(args.type))
             target_var = Variable(target)
             # compute output
             output = model(input_var)
@@ -273,13 +272,13 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
         end = time.time()
 
         if i % args.print_freq == 0:
-            logging.info('{phase} - Epoch: [{0}][{1}/{2}]\t'
+            logging.info('{phase} - Epoch: [{0}][Batches: {1}/{2} Samples: {3}/{4}]\t'
                          'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                          'Data {data_time.val:.3f} ({data_time.avg:.3f})\t'
                          'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                          'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                          'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                             epoch, i, len(data_loader),
+                             epoch, i, len(data_loader), i*args.batch_size, len(data_loader.dataset),
                              phase='TRAINING' if training else 'EVALUATING',
                              batch_time=batch_time,
                              data_time=data_time, loss=losses, top1=top1, top5=top5))
