@@ -81,7 +81,7 @@ def main():
 
     setup_logging(os.path.join(save_path, 'log.txt'))
     results_file = os.path.join(save_path, 'results.%s')
-    results = ResultsLog(results_file % 'csv', results_file % 'html')
+    results = ResultsLog(save_path)
     results.figures = {
         'x' : 'epoch',
         'y' : [['train_loss', 'val_loss'],

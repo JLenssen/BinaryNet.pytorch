@@ -23,9 +23,8 @@ def setup_logging(log_file='log.txt'):
 
 class ResultsLog(object):
 
-    def __init__(self, path='results.csv', plot_path=None):
+    def __init__(self, path='./'):
         self.path = path
-        self.plot_path = plot_path or (self.path + '.html')
         self.figures = {}
         self.results = None
 
@@ -37,10 +36,8 @@ class ResultsLog(object):
             self.results = self.results.append(df, ignore_index=True)
 
     def save(self, title='Training Results'):
-        if os.path.isfile(self.plot_path):
-            os.remove(self.plot_path)
         self.plot()
-        self.results.to_csv(self.path, index=False, index_label=False)
+        self.results.to_csv(self.path + "/results.csv", index=False, index_label=False)
 
     def load(self, path=None):
         path = path or self.path
@@ -55,7 +52,7 @@ class ResultsLog(object):
                             title=self.figures['title'][idx],
                             ylabel=self.figures['ylabel'][idx])
             fig = ax.get_figure()
-            fig.savefig(self.figures['title'][idx] + '.png')
+            fig.savefig(self.path + "/" + self.figures['title'][idx] + '.png')
 
 def save_checkpoint(state, is_best, path='.', filename='checkpoint.pth.tar', save_all=False):
     filename = os.path.join(path, filename)
