@@ -3,14 +3,7 @@ import torch
 import logging.config
 import shutil
 import pandas as pd
-from bokeh.io import output_file, save, show
-from bokeh.plotting import figure
-from bokeh.layouts import column
-#from bokeh.charts import Line, defaults
-#
-#defaults.width = 800
-#defaults.height = 400
-#defaults.tools = 'pan,box_zoom,wheel_zoom,box_select,hover,resize,reset,save'
+import matplotlib.pyplot as plt
 
 
 def setup_logging(log_file='log.txt'):
@@ -33,7 +26,7 @@ class ResultsLog(object):
     def __init__(self, path='results.csv', plot_path=None):
         self.path = path
         self.plot_path = plot_path or (self.path + '.html')
-        self.figures = []
+        self.figures = {}
         self.results = None
 
     def add(self, **kwargs):
@@ -44,13 +37,9 @@ class ResultsLog(object):
             self.results = self.results.append(df, ignore_index=True)
 
     def save(self, title='Training Results'):
-        if len(self.figures) > 0:
-            if os.path.isfile(self.plot_path):
-                os.remove(self.plot_path)
-            output_file(self.plot_path, title=title)
-            plot = column(*self.figures)
-            save(plot)
-            self.figures = []
+        if os.path.isfile(self.plot_path):
+            os.remove(self.plot_path)
+        self.plot()
         self.results.to_csv(self.path, index=False, index_label=False)
 
     def load(self, path=None):
@@ -58,20 +47,15 @@ class ResultsLog(object):
         if os.path.isfile(path):
             self.results.read_csv(path)
 
-    def show(self):
-        if len(self.figures) > 0:
-            plot = column(*self.figures)
-            show(plot)
+    def plot(self):
+        x = self.figures['x']
 
-    #def plot(self, *kargs, **kwargs):
-    #    line = Line(data=self.results, *kargs, **kwargs)
-    #    self.figures.append(line)
-
-    def image(self, *kargs, **kwargs):
-        fig = figure()
-        fig.image(*kargs, **kwargs)
-        self.figures.append(fig)
-
+        for idx in range(len(self.figures['y'])):
+            ax = self.results.plot(x=x, y=self.figures['y'][idx],
+                            title=self.figures['title'][idx],
+                            ylabel=self.figures['ylabel'][idx])
+            fig = ax.get_figure()
+            fig.savefig(self.figures['title'][idx] + '.png')
 
 def save_checkpoint(state, is_best, path='.', filename='checkpoint.pth.tar', save_all=False):
     filename = os.path.join(path, filename)

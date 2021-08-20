@@ -82,6 +82,14 @@ def main():
     setup_logging(os.path.join(save_path, 'log.txt'))
     results_file = os.path.join(save_path, 'results.%s')
     results = ResultsLog(results_file % 'csv', results_file % 'html')
+    results.figures = {
+        'x' : 'epoch',
+        'y' : [['train_loss', 'val_loss'],
+               ['train_error1', 'val_error1'],
+               ['train_error5', 'val_error5']],
+        'title' : ['Loss', 'Error@1', 'Error@5'],
+        'ylabel' : ['loss', 'error %', 'error %']
+    }
 
     logging.info("saving to %s", save_path)
     logging.debug("run arguments: %s", args)
@@ -206,12 +214,7 @@ def main():
         results.add(epoch=epoch + 1, train_loss=train_loss, val_loss=val_loss,
                     train_error1=100 - train_prec1, val_error1=100 - val_prec1,
                     train_error5=100 - train_prec5, val_error5=100 - val_prec5)
-        #results.plot(x='epoch', y=['train_loss', 'val_loss'],
-        #             title='Loss', ylabel='loss')
-        #results.plot(x='epoch', y=['train_error1', 'val_error1'],
-        #             title='Error@1', ylabel='error %')
-        #results.plot(x='epoch', y=['train_error5', 'val_error5'],
-        #             title='Error@5', ylabel='error %')
+
         results.save()
 
 
